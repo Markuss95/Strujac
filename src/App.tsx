@@ -1,11 +1,30 @@
+// src/App.tsx
 import React from "react";
-import FirebaseTest from "./components/FirebaseTest";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./contexts/AutContext";
+import { PrivateRoute } from "./components/PrivateRoute";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import GlobalStyles from "./styles/GlobalStyles";
 
 function App() {
   return (
-    <div className="App">
-      <FirebaseTest />
-    </div>
+    <Router>
+      <AuthProvider>
+        <GlobalStyles />
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/"
+            element={
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+            }
+          />
+        </Routes>
+      </AuthProvider>
+    </Router>
   );
 }
 
