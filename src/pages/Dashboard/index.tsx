@@ -19,6 +19,7 @@ const Header = styled.header`
 
 const LogoutButton = styled.button`
   padding: 8px 16px;
+  margin-left: 2rem;
   background-color: #dc3545;
   color: white;
   border: none;
@@ -49,7 +50,7 @@ const Dashboard = () => {
                   (word) =>
                     word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
                 )
-                .join(" ")}
+                .join(" ")}{" "}
             !
           </span>
 
