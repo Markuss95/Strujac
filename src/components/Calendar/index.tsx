@@ -95,6 +95,20 @@ const Calendar = () => {
     return () => unsubscribe();
   }, []);
 
+  const formatUsername = (email: string): string => {
+    const username = email.split("@")[0]; // Get the part before @
+    const parts = username.split("."); // Split by dot
+    if (parts.length >= 2) {
+      // Capitalize first and second part
+      const firstName =
+        parts[0].charAt(0).toUpperCase() + parts[0].slice(1).toLowerCase();
+      const lastName =
+        parts[1].charAt(0).toUpperCase() + parts[1].slice(1).toLowerCase();
+      return `${firstName} ${lastName}`;
+    }
+    // If there's no dot, just capitalize the first letter
+    return username.charAt(0).toUpperCase() + username.slice(1).toLowerCase();
+  };
   const dohvatiRezervacijuZaVremenskiTermin = (datum: Date, sat: number) => {
     return rezervacije.find((rezervacija) => {
       const pocetakTermina = new Date(datum);
@@ -125,16 +139,13 @@ const Calendar = () => {
           {formatirajVrijeme(sat)}
           {rezervacija && (
             <ReservationInfo>
-              <strong>Zaposlenik:</strong> {rezervacija.username}
+              {formatUsername(rezervacija.username)}
               {rezervacija.description && (
                 <>
                   <br />
-                  <strong>Opis:</strong> {rezervacija.description}
+                  {rezervacija.description}
                 </>
               )}
-              <br />
-              <strong>Vrijeme:</strong> {formatTime(rezervacija.startTime)} -{" "}
-              {formatTime(rezervacija.endTime)}
             </ReservationInfo>
           )}
         </TimeSlot>

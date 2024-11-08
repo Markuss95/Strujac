@@ -113,6 +113,20 @@ const ReservationForm = () => {
       throw error;
     }
   };
+  const formatUsername = (email: string): string => {
+    const username = email.split("@")[0]; // Get the part before @
+    const parts = username.split("."); // Split by dot
+    if (parts.length >= 2) {
+      // Capitalize first and second part
+      const firstName =
+        parts[0].charAt(0).toUpperCase() + parts[0].slice(1).toLowerCase();
+      const lastName =
+        parts[1].charAt(0).toUpperCase() + parts[1].slice(1).toLowerCase();
+      return `${firstName} ${lastName}`;
+    }
+    // If there's no dot, just capitalize the first letter
+    return username.charAt(0).toUpperCase() + username.slice(1).toLowerCase();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -151,7 +165,9 @@ const ReservationForm = () => {
       const rezervacijeRef = collection(db, "reservations");
       await addDoc(rezervacijeRef, {
         userId: currentUser?.uid,
-        username: currentUser?.email?.split("@")[0],
+        username: currentUser?.email
+          ? formatUsername(currentUser.email.split("@")[0])
+          : "Unknown User",
         startTime: datumPocetka,
         endTime: datumKraja,
         description: opis,
