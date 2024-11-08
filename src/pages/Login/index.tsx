@@ -85,7 +85,7 @@ const Login = () => {
     <LoginContainer>
       <LoginForm onSubmit={handleSubmit}>
         <h2 style={{ marginBottom: "1.5rem", textAlign: "center" }}>
-          Car Reservation System
+          Aplikacija Rezervacije Automobila
         </h2>
         {error && <ErrorMessage>{error}</ErrorMessage>}
         <FormGroup>
@@ -100,14 +100,14 @@ const Login = () => {
         <FormGroup>
           <Input
             type="password"
-            placeholder="Password"
+            placeholder="Lozinka"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
         </FormGroup>
         <Button type="submit" disabled={loading}>
-          {loading ? "Signing in..." : "Sign In"}
+          {loading ? "Prijavljujem se..." : "Prijavi se"}
         </Button>
       </LoginForm>
     </LoginContainer>

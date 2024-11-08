@@ -81,15 +81,37 @@ const ReservationForm = () => {
   const [ucitavanje, setUcitavanje] = useState(false);
 
   const provjeriKonflikte = async (datumPocetka: Date, datumKraja: Date) => {
-    const rezervacijeRef = collection(db, "reservations");
-    const q = query(
-      rezervacijeRef,
-      where("startTime", "<=", datumKraja),
-      where("endTime", ">=", datumPocetka)
-    );
+    try {
+      const rezervacijeRef = collection(db, "reservations");
 
-    const snapshot = await getDocs(q);
-    return !snapshot.empty;
+      // Check for any overlapping reservations
+      const q = query(
+        rezervacijeRef,
+        where("startTime", "<", datumKraja),
+        where("endTime", ">", datumPocetka)
+      );
+
+      const snapshot = await getDocs(q);
+      return !snapshot.empty;
+    } catch (error: any) {
+      // If we get an index error, fall back to getting all reservations and checking manually
+      if (error.code === "failed-precondition") {
+        const rezervacijeRef = collection(db, "reservations");
+        const snapshot = await getDocs(rezervacijeRef);
+
+        return snapshot.docs.some((doc) => {
+          const data = doc.data();
+          const startTime = data.startTime.toDate();
+          const endTime = data.endTime.toDate();
+
+          return (
+            (startTime < datumKraja && endTime > datumPocetka) ||
+            (datumPocetka < endTime && datumKraja > startTime)
+          );
+        });
+      }
+      throw error;
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -147,7 +169,6 @@ const ReservationForm = () => {
       setUcitavanje(false);
     }
   };
-
   const handleVrijemePocetkaChange = (vrijeme: string) => {
     setVrijemePocetka(vrijeme);
     // Ako je vrijeme završetka prazno ili manje od vremena početka,

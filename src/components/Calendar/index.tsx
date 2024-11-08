@@ -125,7 +125,7 @@ const Calendar = () => {
           {formatirajVrijeme(sat)}
           {rezervacija && (
             <ReservationInfo>
-              <strong>Korisnik:</strong> {rezervacija.username}
+              <strong>Zaposlenik:</strong> {rezervacija.username}
               {rezervacija.description && (
                 <>
                   <br />
