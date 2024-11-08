@@ -36,7 +36,7 @@ const Dashboard = () => {
   return (
     <DashboardContainer>
       <Header>
-        <h1>Sustav Rezervacije Automobila</h1>
+        <h1>Aplikacija Rezervacije Automobila</h1>
         <div>
           <span>
             Dobrodošli{" "}
