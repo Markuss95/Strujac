@@ -1,3 +1,4 @@
+// src/contexts/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect } from "react";
 import {
   Auth,
@@ -34,13 +35,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     return unsubscribe;
   }, []);
 
+  const translateFirebaseError = (errorCode: string): string => {
+    switch (errorCode) {
+      case "auth/user-not-found":
+        return "Korisnik s ovom email adresom nije pronađen.";
+      case "auth/wrong-password":
+        return "Neispravna lozinka.";
+      case "auth/invalid-email":
+        return "Neispravna email adresa.";
+      case "auth/user-disabled":
+        return "Ovaj korisnički račun je deaktiviran.";
+      case "auth/email-already-in-use":
+        return "Email adresa je već u uporabi.";
+      case "auth/operation-not-allowed":
+        return "Prijava s email adresom trenutno nije omogućena.";
+      case "auth/weak-password":
+        return "Lozinka je preslaba. Mora sadržavati najmanje 6 znakova.";
+      case "auth/network-request-failed":
+        return "Došlo je do mrežne pogreške. Provjerite vašu internetsku vezu.";
+      case "auth/too-many-requests":
+        return "Previše neuspješnih pokušaja prijave. Molimo pokušajte kasnije.";
+      case "auth/invalid-credential":
+        return "Nevažeći podaci za prijavu. Molimo provjerite unesene podatke.";
+      default:
+        return "Došlo je do pogreške prilikom prijave. Molimo pokušajte ponovno.";
+    }
+  };
+
   const signIn = async (email: string, password: string) => {
     try {
       setError(null);
       await signInWithEmailAndPassword(auth, email, password);
     } catch (err: any) {
-      setError(err.message);
-      throw err;
+      const croatianError = translateFirebaseError(err.code);
+      setError(croatianError);
+      throw new Error(croatianError);
     }
   };
 
@@ -49,8 +78,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setError(null);
       await firebaseSignOut(auth);
     } catch (err: any) {
-      setError(err.message);
-      throw err;
+      const croatianError =
+        "Došlo je do pogreške prilikom odjave. Molimo pokušajte ponovno.";
+      setError(croatianError);
+      throw new Error(croatianError);
     }
   };
 
@@ -72,7 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error("useAuth mora biti korišten unutar AuthProvider-a");
   }
   return context;
 };
