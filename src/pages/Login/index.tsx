@@ -85,7 +85,7 @@ const Login = () => {
     <LoginContainer>
       <LoginForm onSubmit={handleSubmit}>
         <h2 style={{ marginBottom: "1.5rem", textAlign: "center" }}>
-          Aplikacija Rezervacije Automobila
+          Aplikacija Za Rezervaciju Automobila
         </h2>
         {error && <ErrorMessage>{error}</ErrorMessage>}
         <FormGroup>
