@@ -1,5 +1,5 @@
-// src/components/TimeInput/index.tsx
-import React, { forwardRef } from "react";
+// Updated src/components/TimeInput/index.tsx
+import React from "react";
 import styled from "styled-components";
 
 const TimeInputWrapper = styled.div`
@@ -9,17 +9,24 @@ const TimeInputWrapper = styled.div`
 
 const StyledSelect = styled.select`
   width: 100%;
-  padding: 8px;
+  padding: 12px 16px;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 1rem;
   appearance: none;
   background-color: white;
+  color: #34495e;
   cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
   &:focus {
     outline: none;
     border-color: #0066cc;
+    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+  }
+
+  option {
+    color: #34495e;
   }
 `;
 
