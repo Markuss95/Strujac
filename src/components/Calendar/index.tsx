@@ -1,9 +1,16 @@
-// src/components/Calendar/index.tsx
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import { collection, query, onSnapshot, orderBy } from "firebase/firestore";
+import {
+  collection,
+  query,
+  onSnapshot,
+  orderBy,
+  deleteDoc,
+  doc,
+} from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { Reservation } from "../../types";
+import { useAuth } from "../../contexts/AutContext";
 
 const CalendarWrapper = styled.div`
   padding: 20px;
@@ -140,7 +147,6 @@ const DailyViewHeader = styled.div`
   padding: 15px 20px;
   border-bottom: 1px solid #eee;
   z-index: 1;
-  // Removed margin-bottom to prevent transparent gap causing visual overlap
 `;
 
 const DailyViewTitle = styled.h3`
@@ -154,7 +160,6 @@ const TimeSlotGrid = styled.div`
   flex-direction: column;
   gap: 8px;
   padding: 20px;
-  // Added explicit padding-top for initial spacing below header
   padding-top: 25px;
 `;
 
@@ -177,6 +182,7 @@ const TimeSlot = styled.div<TimeSlotProps>`
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   }
 `;
+
 const TimeSlotHeader = styled.div`
   font-weight: 600;
   margin-bottom: 6px;
@@ -212,10 +218,36 @@ const ReservationInfo = styled.div`
   }
 `;
 
-const Calendar = () => {
+const Actions = styled.div`
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+`;
+
+const ActionButton = styled.button<{ danger?: boolean }>`
+  padding: 4px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  background-color: ${(props) => (props.danger ? "#dc3545" : "#007bff")};
+  color: white;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: ${(props) => (props.danger ? "#c82333" : "#0062cc")};
+  }
+`;
+
+interface CalendarProps {
+  onEdit: (reservation: Reservation) => void;
+}
+
+const Calendar: React.FC<CalendarProps> = ({ onEdit }) => {
   const [rezervacije, setRezervacije] = useState<Reservation[]>([]);
   const [odabraniDatum, setOdabraniDatum] = useState(new Date());
   const [trenutniMjesec, setTrenutniMjesec] = useState(new Date());
+  const { currentUser } = useAuth();
 
   useEffect(() => {
     const rezervacijeRef = collection(db, "reservations");
@@ -225,6 +257,13 @@ const Calendar = () => {
       const noveRezervacije: Reservation[] = [];
       snapshot.forEach((doc) => {
         const data = doc.data();
+        // Skip invalid documents missing required timestamp fields
+        if (!data.startTime || !data.endTime || !data.createdAt) {
+          console.warn(
+            `Skipping invalid reservation document: ${doc.id} (missing timestamp fields)`
+          );
+          return;
+        }
         noveRezervacije.push({
           ...data,
           id: doc.id,
@@ -362,6 +401,18 @@ const Calendar = () => {
     return `${sat.toString().padStart(2, "0")}:00`;
   };
 
+  const handleDelete = async (id: string) => {
+    if (
+      window.confirm("Jeste li sigurni da želite obrisati ovu rezervaciju?")
+    ) {
+      try {
+        await deleteDoc(doc(db, "reservations", id));
+      } catch (err) {
+        console.error("Greška prilikom brisanja:", err);
+      }
+    }
+  };
+
   const prikaziVremenskeTermine = () => {
     const termini = [];
     for (let sat = 0; sat < 24; sat++) {
@@ -381,18 +432,32 @@ const Calendar = () => {
         <TimeSlot key={sat} isReserved={isReserved}>
           <TimeSlotHeader>{slotHeader}</TimeSlotHeader>
           {rezervacija && (
-            <ReservationInfo>
-              <div>
-                <strong>Korisnik:</strong>{" "}
-                {formatUsername(rezervacija.username)}
-              </div>
-              {rezervacija.description && (
+            <>
+              <ReservationInfo>
                 <div>
-                  <strong>Opis:</strong> {rezervacija.description}
+                  <strong>Korisnik:</strong>{" "}
+                  {formatUsername(rezervacija.username)}
                 </div>
+                {rezervacija.description && (
+                  <div>
+                    <strong>Opis:</strong> {rezervacija.description}
+                  </div>
+                )}
+              </ReservationInfo>
+              {rezervacija.userId === currentUser?.uid && (
+                <Actions>
+                  <ActionButton onClick={() => onEdit(rezervacija)}>
+                    Uredi
+                  </ActionButton>
+                  <ActionButton
+                    danger
+                    onClick={() => handleDelete(rezervacija.id)}
+                  >
+                    Obriši
+                  </ActionButton>
+                </Actions>
               )}
-              {/* Removed duplicate time since now in header */}
-            </ReservationInfo>
+            </>
           )}
         </TimeSlot>
       );
@@ -413,14 +478,6 @@ const Calendar = () => {
         <LegendColor color="#ff4d4d" />
         <span>Rezervirano</span>
       </LegendItem>
-      {/* <LegendItem>
-        <LegendColor color="#4dff4d" />
-        <span>Danas</span>
-      </LegendItem>
-      <LegendItem>
-        <LegendColor color="#1a75ff" />
-        <span>Odabrano</span>
-      </LegendItem> */}
       <LegendItem>
         <LegendColor color="#f0f0f0" />
         <span>Slobodno</span>

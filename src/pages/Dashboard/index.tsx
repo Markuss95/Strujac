@@ -1,9 +1,10 @@
 // Updated src/pages/Dashboard/index.tsx
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import { useAuth } from "../../contexts/AutContext";
 import Calendar from "../../components/Calendar";
 import ReservationForm from "../../components/ReservationFrom";
+import { Reservation } from "../../types";
 
 const DashboardContainer = styled.div`
   max-width: 1200px;
@@ -78,12 +79,14 @@ const FormSection = styled.section`
   overflow: hidden;
 
   @media (max-width: 900px) {
-    order: -1; // Move form above calendar on mobile for better UX
+    order: -1;
   }
 `;
 
 const Dashboard = () => {
   const { signOut, currentUser } = useAuth();
+  const [editingReservation, setEditingReservation] =
+    useState<Reservation | null>(null);
 
   const getDisplayName = () => {
     if (!currentUser?.email) return "";
@@ -93,6 +96,14 @@ const Dashboard = () => {
       .slice(0, 2)
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(" ");
+  };
+
+  const handleEdit = (reservation: Reservation) => {
+    setEditingReservation(reservation);
+  };
+
+  const handleFormSuccess = () => {
+    setEditingReservation(null);
   };
 
   return (
@@ -106,10 +117,13 @@ const Dashboard = () => {
       </Header>
       <MainContent>
         <CalendarSection>
-          <Calendar />
+          <Calendar onEdit={handleEdit} />
         </CalendarSection>
         <FormSection>
-          <ReservationForm />
+          <ReservationForm
+            existingReservation={editingReservation}
+            onSuccess={handleFormSuccess}
+          />
         </FormSection>
       </MainContent>
     </DashboardContainer>

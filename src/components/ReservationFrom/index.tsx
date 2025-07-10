@@ -1,11 +1,20 @@
 // src/components/ReservationForm/index.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  query,
+  where,
+  getDocs,
+  doc,
+  updateDoc,
+} from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { useAuth } from "../../contexts/AutContext";
 import CustomDatePicker from "../DatePicker";
 import TimeInput from "../TimeInput";
+import { Reservation } from "../../types";
 import "react-datepicker/dist/react-datepicker.css";
 
 const FormContainer = styled.form`
@@ -71,7 +80,15 @@ const TimeContainer = styled.div`
   gap: 15px;
 `;
 
-const ReservationForm = () => {
+interface ReservationFormProps {
+  existingReservation?: Reservation | null;
+  onSuccess?: () => void;
+}
+
+const ReservationForm: React.FC<ReservationFormProps> = ({
+  existingReservation,
+  onSuccess,
+}) => {
   const { currentUser } = useAuth();
   const [odabraniDatum, setOdabraniDatum] = useState<Date | null>(null);
   const [vrijemePocetka, setVrijemePocetka] = useState("");
@@ -80,11 +97,34 @@ const ReservationForm = () => {
   const [greska, setGreska] = useState<string | null>(null);
   const [ucitavanje, setUcitavanje] = useState(false);
 
-  const provjeriKonflikte = async (datumPocetka: Date, datumKraja: Date) => {
+  useEffect(() => {
+    if (existingReservation) {
+      setOdabraniDatum(existingReservation.startTime);
+      setVrijemePocetka(formatTime(existingReservation.startTime));
+      setVrijemeKraja(formatTime(existingReservation.endTime));
+      setOpis(existingReservation.description || "");
+    } else {
+      // Reset for create mode
+      setOdabraniDatum(null);
+      setVrijemePocetka("");
+      setVrijemeKraja("");
+      setOpis("");
+    }
+  }, [existingReservation]);
+
+  const formatTime = (date: Date): string => {
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    return `${hours}:${minutes}`;
+  };
+
+  const provjeriKonflikte = async (
+    datumPocetka: Date,
+    datumKraja: Date,
+    excludeId?: string
+  ) => {
     try {
       const rezervacijeRef = collection(db, "reservations");
-
-      // Check for any overlapping reservations
       const q = query(
         rezervacijeRef,
         where("startTime", "<", datumKraja),
@@ -92,39 +132,43 @@ const ReservationForm = () => {
       );
 
       const snapshot = await getDocs(q);
-      return !snapshot.empty;
+      const overlapping = snapshot.docs.filter((d) => d.id !== excludeId);
+      return overlapping.length > 0;
     } catch (error: any) {
-      // If we get an index error, fall back to getting all reservations and checking manually
       if (error.code === "failed-precondition") {
         const rezervacijeRef = collection(db, "reservations");
         const snapshot = await getDocs(rezervacijeRef);
 
-        return snapshot.docs.some((doc) => {
-          const data = doc.data();
+        return snapshot.docs.some((d) => {
+          if (d.id === excludeId) return false;
+          const data = d.data();
+          // Skip invalid documents missing required timestamp fields
+          if (!data.startTime || !data.endTime) {
+            console.warn(
+              `Skipping invalid reservation document in conflict check: ${d.id} (missing timestamp fields)`
+            );
+            return false;
+          }
           const startTime = data.startTime.toDate();
           const endTime = data.endTime.toDate();
 
-          return (
-            (startTime < datumKraja && endTime > datumPocetka) ||
-            (datumPocetka < endTime && datumKraja > startTime)
-          );
+          return startTime < datumKraja && endTime > datumPocetka;
         });
       }
       throw error;
     }
   };
+
   const formatUsername = (email: string): string => {
-    const username = email.split("@")[0]; // Get the part before @
-    const parts = username.split("."); // Split by dot
+    const username = email.split("@")[0];
+    const parts = username.split(".");
     if (parts.length >= 2) {
-      // Capitalize first and second part
       const firstName =
         parts[0].charAt(0).toUpperCase() + parts[0].slice(1).toLowerCase();
       const lastName =
         parts[1].charAt(0).toUpperCase() + parts[1].slice(1).toLowerCase();
       return `${firstName} ${lastName}`;
     }
-    // If there's no dot, just capitalize the first letter
     return username.charAt(0).toUpperCase() + username.slice(1).toLowerCase();
   };
 
@@ -157,38 +201,53 @@ const ReservationForm = () => {
         throw new Error("Vrijeme završetka mora biti nakon vremena početka");
       }
 
-      const imaKonflikta = await provjeriKonflikte(datumPocetka, datumKraja);
+      const imaKonflikta = await provjeriKonflikte(
+        datumPocetka,
+        datumKraja,
+        existingReservation?.id
+      );
       if (imaKonflikta) {
         throw new Error("Ovaj termin je već rezerviran");
       }
 
-      const rezervacijeRef = collection(db, "reservations");
-      await addDoc(rezervacijeRef, {
-        userId: currentUser?.uid,
-        username: currentUser?.email
-          ? formatUsername(currentUser.email.split("@")[0])
-          : "Unknown User",
-        startTime: datumPocetka,
-        endTime: datumKraja,
-        description: opis,
-        createdAt: new Date(),
-      });
+      if (existingReservation) {
+        // Update existing reservation
+        const resDoc = doc(db, "reservations", existingReservation.id);
+        await updateDoc(resDoc, {
+          startTime: datumPocetka,
+          endTime: datumKraja,
+          description: opis,
+        });
+      } else {
+        // Create new reservation
+        const rezervacijeRef = collection(db, "reservations");
+        await addDoc(rezervacijeRef, {
+          userId: currentUser?.uid,
+          username: currentUser?.email
+            ? formatUsername(currentUser.email)
+            : "Unknown User",
+          startTime: datumPocetka,
+          endTime: datumKraja,
+          description: opis,
+          createdAt: new Date(),
+        });
+      }
 
-      // Resetiranje forme
+      // Reset form and call onSuccess
       setOdabraniDatum(null);
       setVrijemePocetka("");
       setVrijemeKraja("");
       setOpis("");
+      if (onSuccess) onSuccess();
     } catch (err: any) {
       setGreska(err.message);
     } finally {
       setUcitavanje(false);
     }
   };
+
   const handleVrijemePocetkaChange = (vrijeme: string) => {
     setVrijemePocetka(vrijeme);
-    // Ako je vrijeme završetka prazno ili manje od vremena početka,
-    // postavi vrijeme završetka na sat nakon vremena početka
     if (!vrijemeKraja || vrijeme >= vrijemeKraja) {
       const [sati, minute] = vrijeme.split(":").map(Number);
       let noviSati = sati + 1;
@@ -206,7 +265,11 @@ const ReservationForm = () => {
 
   return (
     <FormContainer onSubmit={handleSubmit}>
-      <h2>Rezervirajte Automobil</h2>
+      <h2>
+        {existingReservation
+          ? "Ažuriraj Rezervaciju"
+          : "Rezervirajte Automobil"}
+      </h2>
       {greska && <ErrorMessage>{greska}</ErrorMessage>}
 
       <FormGroup>
@@ -252,7 +315,11 @@ const ReservationForm = () => {
       </FormGroup>
 
       <Button type="submit" disabled={ucitavanje}>
-        {ucitavanje ? "Stvaranje rezervacije..." : "Rezerviraj automobil"}
+        {ucitavanje
+          ? "Spremanje..."
+          : existingReservation
+          ? "Ažuriraj rezervaciju"
+          : "Rezerviraj automobil"}
       </Button>
     </FormContainer>
   );
