@@ -1,4 +1,4 @@
-// Updated src/components/DatePicker/index.tsx
+// src/components/DatePicker/index.tsx
 import React from "react";
 import styled from "styled-components";
 import DatePicker, { registerLocale } from "react-datepicker";
@@ -89,6 +89,11 @@ const DatePickerWrapper = styled.div`
     color: #adb5bd;
   }
 
+  .react-datepicker__day--disabled {
+    color: #ccc !important;
+    pointer-events: none;
+  }
+
   .react-datepicker__navigation {
     top: 12px;
   }
@@ -106,12 +111,14 @@ interface CustomDatePickerProps {
   selectedDate: Date | null;
   onChange: (date: Date | null) => void;
   placeholderText?: string;
+  minDate?: Date;
 }
 
 const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   selectedDate,
   onChange,
   placeholderText = "Odaberite datum",
+  minDate,
 }) => {
   return (
     <DatePickerWrapper>
@@ -131,6 +138,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
         previousMonthButtonLabel="Prethodni mjesec"
         nextMonthButtonLabel="Sljedeći mjesec"
         adjustDateOnChange
+        minDate={minDate}
       />
     </DatePickerWrapper>
   );

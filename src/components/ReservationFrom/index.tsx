@@ -1,4 +1,4 @@
-// src/components/ReservationForm/index.tsx
+// src/components/ReservationFrom/index.tsx
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import {
@@ -201,6 +201,12 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
         throw new Error("Vrijeme završetka mora biti nakon vremena početka");
       }
 
+      // Additional check for past dates (though minDate should prevent it)
+      const now = new Date();
+      if (datumPocetka < now) {
+        throw new Error("Ne možete rezervirati prošle datume");
+      }
+
       const imaKonflikta = await provjeriKonflikte(
         datumPocetka,
         datumKraja,
@@ -278,6 +284,9 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
           selectedDate={odabraniDatum}
           onChange={(date) => setOdabraniDatum(date)}
           placeholderText="Odaberite datum"
+          minDate={
+            existingReservation ? existingReservation.startTime : new Date()
+          } // For edit, minDate is original start, for create it's today
         />
       </FormGroup>
 
