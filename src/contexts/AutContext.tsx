@@ -76,7 +76,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const user = userCredential.user;
 
       // Create or update user profile in Firestore
-      const userRef = doc(db, "test", user.uid); // Assuming "test" collection as per previous
+      const userRef = doc(db, "users", user.uid); // Change "test" to "users"
       const userSnap = await getDoc(userRef);
       if (!userSnap.exists() && user.email) {
         await setDoc(userRef, {

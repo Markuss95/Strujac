@@ -88,9 +88,11 @@ const Users: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const navigate = useNavigate();
 
+  // ... (rest of the file remains the same)
+
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "test"), (snapshot) => {
-      // Change "users" to "test"
+    const unsubscribe = onSnapshot(collection(db, "users"), (snapshot) => {
+      // Change "test" to "users"
       const userList: User[] = snapshot.docs.map(
         (doc) =>
           ({
