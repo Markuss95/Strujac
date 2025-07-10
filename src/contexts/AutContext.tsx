@@ -8,6 +8,9 @@ import {
   onAuthStateChanged,
 } from "firebase/auth";
 import { auth } from "../config/firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { db } from "../config/firebase";
+import { formatUsername } from "../utils/userUtils";
 
 interface AuthContextType {
   currentUser: User | null;
@@ -65,8 +68,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const signIn = async (email: string, password: string) => {
     try {
       setError(null);
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const user = userCredential.user;
+
+      // Create or update user profile in Firestore
+      const userRef = doc(db, "test", user.uid); // Assuming "test" collection as per previous
+      const userSnap = await getDoc(userRef);
+      if (!userSnap.exists() && user.email) {
+        await setDoc(userRef, {
+          email: user.email,
+          username: formatUsername(user.email),
+        });
+      }
     } catch (err: any) {
+      console.error("Full login error:", err.code, err.message, err); // Add this line to log details
       const croatianError = translateFirebaseError(err.code);
       setError(croatianError);
       throw new Error(croatianError);

@@ -6,6 +6,7 @@ import Calendar from "../../components/Calendar";
 import ReservationForm from "../../components/ReservationFrom";
 import Modal from "../../components/Modal";
 import { Reservation } from "../../types";
+import { Link } from "react-router-dom";
 
 const DashboardContainer = styled.div`
   max-width: 1200px;
@@ -127,6 +128,22 @@ const Dashboard = () => {
         <Title>Rezervacija Službenog Automobila</Title>
         <UserSection>
           <WelcomeText>Dobrodošli, {getDisplayName()}!</WelcomeText>
+          <Link to="/users">
+            <button
+              style={{
+                padding: "0.5rem 1rem",
+                backgroundColor: "#0066cc",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontWeight: "500",
+                marginRight: "0.5rem",
+              }}
+            >
+              Korisnici
+            </button>
+          </Link>
           <LogoutButton onClick={signOut}>Odjava</LogoutButton>
         </UserSection>
       </Header>
