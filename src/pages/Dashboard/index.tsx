@@ -4,6 +4,7 @@ import styled from "styled-components";
 import { useAuth } from "../../contexts/AutContext";
 import Calendar from "../../components/Calendar";
 import ReservationForm from "../../components/ReservationFrom";
+import Modal from "../../components/Modal"; // New import
 import { Reservation } from "../../types";
 
 const DashboardContainer = styled.div`
@@ -87,6 +88,7 @@ const Dashboard = () => {
   const { signOut, currentUser } = useAuth();
   const [editingReservation, setEditingReservation] =
     useState<Reservation | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const getDisplayName = () => {
     if (!currentUser?.email) return "";
@@ -99,10 +101,22 @@ const Dashboard = () => {
   };
 
   const handleEdit = (reservation: Reservation) => {
+    const now = new Date();
+    if (reservation.startTime < now) {
+      alert("Ne možete uređivati prošle rezervacije.");
+      return;
+    }
     setEditingReservation(reservation);
+    setShowEditModal(true);
   };
 
   const handleFormSuccess = () => {
+    setShowEditModal(false);
+    setEditingReservation(null);
+  };
+
+  const handleCloseModal = () => {
+    setShowEditModal(false);
     setEditingReservation(null);
   };
 
@@ -120,12 +134,17 @@ const Dashboard = () => {
           <Calendar onEdit={handleEdit} />
         </CalendarSection>
         <FormSection>
+          <ReservationForm onSuccess={handleFormSuccess} />
+        </FormSection>
+      </MainContent>
+      {showEditModal && editingReservation && (
+        <Modal onClose={handleCloseModal}>
           <ReservationForm
             existingReservation={editingReservation}
             onSuccess={handleFormSuccess}
           />
-        </FormSection>
-      </MainContent>
+        </Modal>
+      )}
     </DashboardContainer>
   );
 };
