@@ -1,3 +1,4 @@
+// src/components/Calendar/index.tsx
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import {
@@ -239,6 +240,13 @@ const ActionButton = styled.button<{ danger?: boolean }>`
   }
 `;
 
+const NoReservationsMessage = styled.div`
+  padding: 20px;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+`;
+
 interface CalendarProps {
   onEdit: (reservation: Reservation) => void;
 }
@@ -291,18 +299,11 @@ const Calendar: React.FC<CalendarProps> = ({ onEdit }) => {
     return username.charAt(0).toUpperCase() + username.slice(1).toLowerCase();
   };
 
-  const dohvatiRezervacijeZaVremenskiTermin = (datum: Date, sat: number) => {
-    return rezervacije.find((rezervacija) => {
-      const pocetakTermina = new Date(datum);
-      pocetakTermina.setHours(sat, 0, 0, 0);
-      const krajTermina = new Date(datum);
-      krajTermina.setHours(sat + 1, 0, 0, 0);
-
-      return (
-        rezervacija.startTime < krajTermina &&
-        rezervacija.endTime > pocetakTermina
-      );
-    });
+  const formatVrijemeFull = (date: Date): string => {
+    return `${date.getHours().toString().padStart(2, "0")}:${date
+      .getMinutes()
+      .toString()
+      .padStart(2, "0")}`;
   };
 
   const getMonthData = () => {
@@ -397,10 +398,6 @@ const Calendar: React.FC<CalendarProps> = ({ onEdit }) => {
     );
   };
 
-  const formatirajVrijeme = (sat: number): string => {
-    return `${sat.toString().padStart(2, "0")}:00`;
-  };
-
   const handleDelete = async (id: string) => {
     if (
       window.confirm("Jeste li sigurni da želite obrisati ovu rezervaciju?")
@@ -414,55 +411,52 @@ const Calendar: React.FC<CalendarProps> = ({ onEdit }) => {
   };
 
   const prikaziVremenskeTermine = () => {
-    const termini = [];
-    for (let sat = 0; sat < 24; sat++) {
-      const rezervacija = dohvatiRezervacijeZaVremenskiTermin(
-        odabraniDatum,
-        sat
-      );
-      const isReserved = !!rezervacija;
-      const slotHeader =
-        isReserved && rezervacija
-          ? `${formatirajVrijeme(
-              rezervacija.startTime.getHours()
-            )} - ${formatirajVrijeme(rezervacija.endTime.getHours())}`
-          : formatirajVrijeme(sat);
+    // Filter reservations for the selected day
+    const dailyReservations = rezervacije
+      .filter((rez) => {
+        return rez.startTime.toDateString() === odabraniDatum.toDateString();
+      })
+      .sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
 
-      termini.push(
-        <TimeSlot key={sat} isReserved={isReserved}>
+    if (dailyReservations.length === 0) {
+      return (
+        <NoReservationsMessage>
+          Nema rezervacija za ovaj dan.
+        </NoReservationsMessage>
+      );
+    }
+
+    return dailyReservations.map((rezervacija) => {
+      const slotHeader = `${formatVrijemeFull(
+        rezervacija.startTime
+      )} - ${formatVrijemeFull(rezervacija.endTime)}`;
+
+      return (
+        <TimeSlot key={rezervacija.id} isReserved={true}>
           <TimeSlotHeader>{slotHeader}</TimeSlotHeader>
-          {rezervacija && (
-            <>
-              <ReservationInfo>
-                <div>
-                  <strong>Korisnik:</strong>{" "}
-                  {formatUsername(rezervacija.username)}
-                </div>
-                {rezervacija.description && (
-                  <div>
-                    <strong>Opis:</strong> {rezervacija.description}
-                  </div>
-                )}
-              </ReservationInfo>
-              {rezervacija.userId === currentUser?.uid && (
-                <Actions>
-                  <ActionButton onClick={() => onEdit(rezervacija)}>
-                    Uredi
-                  </ActionButton>
-                  <ActionButton
-                    danger
-                    onClick={() => handleDelete(rezervacija.id)}
-                  >
-                    Obriši
-                  </ActionButton>
-                </Actions>
-              )}
-            </>
+          <ReservationInfo>
+            <div>
+              <strong>Korisnik:</strong> {formatUsername(rezervacija.username)}
+            </div>
+            {rezervacija.description && (
+              <div>
+                <strong>Opis:</strong> {rezervacija.description}
+              </div>
+            )}
+          </ReservationInfo>
+          {rezervacija.userId === currentUser?.uid && (
+            <Actions>
+              <ActionButton onClick={() => onEdit(rezervacija)}>
+                Uredi
+              </ActionButton>
+              <ActionButton danger onClick={() => handleDelete(rezervacija.id)}>
+                Obriši
+              </ActionButton>
+            </Actions>
           )}
         </TimeSlot>
       );
-    }
-    return termini;
+    });
   };
 
   const formatirajDatum = (datum: Date): string => {
