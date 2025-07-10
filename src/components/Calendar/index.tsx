@@ -126,24 +126,36 @@ const LegendColor = styled.div<{ color: string }>`
 
 const DailyViewWrapper = styled.div`
   margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #eee;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  max-height: 600px;
+  overflow-y: auto;
 `;
 
 const DailyViewHeader = styled.div`
-  margin-bottom: 15px;
-  padding: 0 10px;
+  position: sticky;
+  top: 0;
+  background: white;
+  padding: 15px 20px;
+  border-bottom: 1px solid #eee;
+  z-index: 1;
+  // Removed margin-bottom to prevent transparent gap causing visual overlap
 `;
 
 const DailyViewTitle = styled.h3`
   margin: 0;
-  color: #333;
+  color: #2c3e50;
+  font-size: 1.25rem;
 `;
 
 const TimeSlotGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px;
+  // Added explicit padding-top for initial spacing below header
+  padding-top: 25px;
 `;
 
 interface TimeSlotProps {
@@ -151,26 +163,52 @@ interface TimeSlotProps {
 }
 
 const TimeSlot = styled.div<TimeSlotProps>`
-  padding: 15px;
-  margin: 2px 0;
-  border-radius: 4px;
-  background-color: ${(props) => (props.isReserved ? "#ff4d4d" : "#f0f0f0")};
-  color: ${(props) => (props.isReserved ? "white" : "#333")};
-`;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px;
+  border-radius: 6px;
+  background-color: ${(props) => (props.isReserved ? "#e74c3c" : "#f6f8fa")};
+  color: ${(props) => (props.isReserved ? "white" : "#34495e")};
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+`;
 const TimeSlotHeader = styled.div`
-  font-weight: bold;
-  margin-bottom: 5px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  &::before {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: currentColor;
+    opacity: 0.3;
+  }
 `;
 
 const ReservationInfo = styled.div`
-  margin-top: 5px;
-  padding: 8px;
+  padding: 8px 12px;
   border-radius: 4px;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.15);
+  font-size: 0.9rem;
 
   > div {
-    margin: 5px 0;
+    margin: 4px 0;
+    display: flex;
+    gap: 6px;
+
+    strong {
+      font-weight: 600;
+    }
   }
 `;
 
@@ -331,9 +369,17 @@ const Calendar = () => {
         odabraniDatum,
         sat
       );
+      const isReserved = !!rezervacija;
+      const slotHeader =
+        isReserved && rezervacija
+          ? `${formatirajVrijeme(
+              rezervacija.startTime.getHours()
+            )} - ${formatirajVrijeme(rezervacija.endTime.getHours())}`
+          : formatirajVrijeme(sat);
+
       termini.push(
-        <TimeSlot key={sat} isReserved={!!rezervacija}>
-          <TimeSlotHeader>{formatirajVrijeme(sat)}</TimeSlotHeader>
+        <TimeSlot key={sat} isReserved={isReserved}>
+          <TimeSlotHeader>{slotHeader}</TimeSlotHeader>
           {rezervacija && (
             <ReservationInfo>
               <div>
@@ -345,11 +391,7 @@ const Calendar = () => {
                   <strong>Opis:</strong> {rezervacija.description}
                 </div>
               )}
-              <div>
-                <strong>Vrijeme:</strong>{" "}
-                {formatirajVrijeme(rezervacija.startTime.getHours())} -
-                {formatirajVrijeme(rezervacija.endTime.getHours())}
-              </div>
+              {/* Removed duplicate time since now in header */}
             </ReservationInfo>
           )}
         </TimeSlot>
