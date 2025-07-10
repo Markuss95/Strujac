@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
 import styled from "styled-components";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, doc, updateDoc } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { User } from "../../types";
 import { useAuth } from "../../contexts/AutContext";
@@ -78,6 +78,26 @@ const TableCell = styled.td`
   color: #34495e;
 `;
 
+const ActionButton = styled.button<{ danger?: boolean }>`
+  padding: 0.25rem 0.5rem;
+  background-color: ${(props) => (props.danger ? "#e74c3c" : "#27ae60")};
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: ${(props) => (props.danger ? "#c0392b" : "#219a52")};
+  }
+
+  &:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+`;
+
 const NoUsersMessage = styled.div`
   text-align: center;
   padding: 2rem;
@@ -86,7 +106,7 @@ const NoUsersMessage = styled.div`
 `;
 
 const Users: React.FC = () => {
-  const { userRole } = useAuth();
+  const { userRole, currentUser } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const navigate = useNavigate();
   const [shouldRedirect, setShouldRedirect] = useState(false);
@@ -115,6 +135,45 @@ const Users: React.FC = () => {
     return <Navigate to="/" replace />;
   }
 
+  const getRoleDisplay = (role?: "admin" | "regular") => {
+    switch (role) {
+      case "admin":
+        return "Administrator";
+      case "regular":
+        return "Običan korisnik";
+      default:
+        return "Običan korisnik";
+    }
+  };
+
+  const getStatusDisplay = (disabled?: boolean) => {
+    return disabled ? "Deaktiviran" : "Aktivan";
+  };
+
+  const handleToggleActive = async (user: User) => {
+    if (user.id === currentUser?.uid) {
+      alert("Ne možete deaktivirati/aktivirati vlastiti račun.");
+      return;
+    }
+
+    const newDisabled = !user.disabled;
+    const action = newDisabled ? "deaktivirati" : "aktivirati";
+
+    if (
+      window.confirm(`Jeste li sigurni da želite ${action} ovog korisnika?`)
+    ) {
+      try {
+        const userRef = doc(db, "users", user.id);
+        await updateDoc(userRef, {
+          disabled: newDisabled,
+        });
+      } catch (error) {
+        console.error("Error updating user status:", error);
+        alert("Došlo je do greške prilikom ažuriranja statusa korisnika.");
+      }
+    }
+  };
+
   return (
     <UsersContainer>
       <Header>
@@ -129,6 +188,9 @@ const Users: React.FC = () => {
             <TableRow>
               <TableHeader>Ime i Prezime</TableHeader>
               <TableHeader>Email</TableHeader>
+              <TableHeader>Uloga</TableHeader>
+              <TableHeader>Status</TableHeader>
+              <TableHeader>Akcije</TableHeader>
             </TableRow>
           </TableHead>
           <tbody>
@@ -136,6 +198,17 @@ const Users: React.FC = () => {
               <TableRow key={user.id}>
                 <TableCell>{user.username}</TableCell>
                 <TableCell>{user.email}</TableCell>
+                <TableCell>{getRoleDisplay(user.role)}</TableCell>
+                <TableCell>{getStatusDisplay(user.disabled)}</TableCell>
+                <TableCell>
+                  <ActionButton
+                    danger={user.disabled ? false : true}
+                    onClick={() => handleToggleActive(user)}
+                    disabled={user.id === currentUser?.uid}
+                  >
+                    {user.disabled ? "Aktiviraj" : "Deaktiviraj"}
+                  </ActionButton>
+                </TableCell>
               </TableRow>
             ))}
           </tbody>

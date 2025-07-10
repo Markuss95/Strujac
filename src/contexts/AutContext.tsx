@@ -41,10 +41,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           const userRef = doc(db, "users", user.uid);
           const userSnap = await getDoc(userRef);
           if (userSnap.exists()) {
-            const data = userSnap.data() as { role?: "admin" | "regular" };
-            setUserRole(data.role || "regular");
+            const data = userSnap.data() as {
+              role?: "admin" | "regular";
+              disabled?: boolean;
+            };
+            if (data.disabled) {
+              setUserRole(null);
+            } else {
+              setUserRole(data.role || "regular");
+            }
           } else {
-            setUserRole("regular");
+            setUserRole(null);
           }
         } else {
           setUserRole(null);
@@ -93,20 +100,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       );
       const user: FirebaseUser = userCredential.user; // Specify FirebaseUser
 
-      // Create or update user profile in Firestore with default role
+      // Check user profile in Firestore
       const userRef = doc(db, "users", user.uid);
       const userSnap = await getDoc(userRef);
-      if (!userSnap.exists() && user.email) {
-        await setDoc(userRef, {
-          email: user.email,
-          username: formatUsername(user.email),
-          role: "regular", // Default to regular
-        });
-        setUserRole("regular");
-      } else {
-        const data = userSnap.data() as { role?: "admin" | "regular" };
-        setUserRole(data.role || "regular");
+      if (!userSnap.exists()) {
+        // Create profile if it doesn't exist (for new users)
+        if (user.email) {
+          await setDoc(userRef, {
+            email: user.email,
+            username: formatUsername(user.email),
+            role: "regular",
+            disabled: false,
+          });
+          setUserRole("regular");
+          return;
+        } else {
+          throw new Error("Korisnički račun nije aktivan ili ne postoji.");
+        }
       }
+      const data = userSnap.data() as {
+        role?: "admin" | "regular";
+        disabled?: boolean;
+      };
+      if (data.disabled) {
+        throw new Error("Korisnički račun je deaktiviran.");
+      }
+      setUserRole(data.role || "regular");
     } catch (err: any) {
       console.error("Full login error:", err.code, err.message, err);
       const croatianError = translateFirebaseError(err.code);

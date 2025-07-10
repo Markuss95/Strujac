@@ -3,8 +3,10 @@ export interface User {
   id: string;
   username: string;
   email: string;
-  role?: "admin" | "regular"; // Optional for backward compatibility
+  role?: "admin" | "regular";
+  disabled?: boolean;
 }
+
 export interface Reservation {
   id: string;
   userId: string;
