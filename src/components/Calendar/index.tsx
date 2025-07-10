@@ -249,11 +249,16 @@ const NoReservationsMessage = styled.div`
 
 interface CalendarProps {
   onEdit: (reservation: Reservation) => void;
+  selectedDate: Date;
+  setSelectedDate: React.Dispatch<React.SetStateAction<Date>>;
 }
 
-const Calendar: React.FC<CalendarProps> = ({ onEdit }) => {
+const Calendar: React.FC<CalendarProps> = ({
+  onEdit,
+  selectedDate,
+  setSelectedDate,
+}) => {
   const [rezervacije, setRezervacije] = useState<Reservation[]>([]);
-  const [odabraniDatum, setOdabraniDatum] = useState(new Date());
   const [trenutniMjesec, setTrenutniMjesec] = useState(new Date());
   const { currentUser } = useAuth();
 
@@ -392,9 +397,9 @@ const Calendar: React.FC<CalendarProps> = ({ onEdit }) => {
 
   const isSelected = (date: Date) => {
     return (
-      date.getDate() === odabraniDatum.getDate() &&
-      date.getMonth() === odabraniDatum.getMonth() &&
-      date.getFullYear() === odabraniDatum.getFullYear()
+      date.getDate() === selectedDate.getDate() &&
+      date.getMonth() === selectedDate.getMonth() &&
+      date.getFullYear() === selectedDate.getFullYear()
     );
   };
 
@@ -414,7 +419,7 @@ const Calendar: React.FC<CalendarProps> = ({ onEdit }) => {
     // Filter reservations for the selected day
     const dailyReservations = rezervacije
       .filter((rez) => {
-        return rez.startTime.toDateString() === odabraniDatum.toDateString();
+        return rez.startTime.toDateString() === selectedDate.toDateString();
       })
       .sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
 
@@ -484,13 +489,13 @@ const Calendar: React.FC<CalendarProps> = ({ onEdit }) => {
       <MonthViewWrapper>
         <MonthHeader>
           <MonthNavButton onClick={() => promijeniMjesec(-1)}>
-            &larr; Prethodni
+            ← Prethodni
           </MonthNavButton>
           <MonthTitle>
             {mjeseci[trenutniMjesec.getMonth()]} {trenutniMjesec.getFullYear()}
           </MonthTitle>
           <MonthNavButton onClick={() => promijeniMjesec(1)}>
-            Sljedeći &rarr;
+            Sljedeći →
           </MonthNavButton>
         </MonthHeader>
 
@@ -508,7 +513,7 @@ const Calendar: React.FC<CalendarProps> = ({ onEdit }) => {
               isToday={isToday(date)}
               hasReservations={provjeriRezervacijeZaDan(date)}
               isSelected={isSelected(date)}
-              onClick={() => setOdabraniDatum(date)}
+              onClick={() => setSelectedDate(date)}
             >
               {date.getDate()}
             </Day>
@@ -521,7 +526,7 @@ const Calendar: React.FC<CalendarProps> = ({ onEdit }) => {
       <DailyViewWrapper>
         <DailyViewHeader>
           <DailyViewTitle>
-            Raspored za {formatirajDatum(odabraniDatum)}
+            Raspored za {formatirajDatum(selectedDate)}
           </DailyViewTitle>
         </DailyViewHeader>
         <TimeSlotGrid>{prikaziVremenskeTermine()}</TimeSlotGrid>

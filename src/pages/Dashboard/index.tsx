@@ -1,10 +1,10 @@
-// Updated src/pages/Dashboard/index.tsx
+// src/pages/Dashboard/index.tsx
 import React, { useState } from "react";
 import styled from "styled-components";
 import { useAuth } from "../../contexts/AutContext";
 import Calendar from "../../components/Calendar";
 import ReservationForm from "../../components/ReservationFrom";
-import Modal from "../../components/Modal"; // New import
+import Modal from "../../components/Modal";
 import { Reservation } from "../../types";
 
 const DashboardContainer = styled.div`
@@ -86,6 +86,7 @@ const FormSection = styled.section`
 
 const Dashboard = () => {
   const { signOut, currentUser } = useAuth();
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [editingReservation, setEditingReservation] =
     useState<Reservation | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -131,10 +132,17 @@ const Dashboard = () => {
       </Header>
       <MainContent>
         <CalendarSection>
-          <Calendar onEdit={handleEdit} />
+          <Calendar
+            onEdit={handleEdit}
+            selectedDate={selectedDate}
+            setSelectedDate={setSelectedDate}
+          />
         </CalendarSection>
         <FormSection>
-          <ReservationForm onSuccess={handleFormSuccess} />
+          <ReservationForm
+            onSuccess={handleFormSuccess}
+            selectedDate={selectedDate}
+          />
         </FormSection>
       </MainContent>
       {showEditModal && editingReservation && (

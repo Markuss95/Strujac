@@ -83,11 +83,13 @@ const TimeContainer = styled.div`
 interface ReservationFormProps {
   existingReservation?: Reservation | null;
   onSuccess?: () => void;
+  selectedDate?: Date;
 }
 
 const ReservationForm: React.FC<ReservationFormProps> = ({
   existingReservation,
   onSuccess,
+  selectedDate,
 }) => {
   const { currentUser } = useAuth();
   const [odabraniDatum, setOdabraniDatum] = useState<Date | null>(null);
@@ -104,13 +106,13 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
       setVrijemeKraja(formatTime(existingReservation.endTime));
       setOpis(existingReservation.description || "");
     } else {
-      // Reset for create mode
-      setOdabraniDatum(null);
+      // For create mode, default to selectedDate if provided
+      setOdabraniDatum(selectedDate || null);
       setVrijemePocetka("");
       setVrijemeKraja("");
       setOpis("");
     }
-  }, [existingReservation]);
+  }, [existingReservation, selectedDate]);
 
   const formatTime = (date: Date): string => {
     const hours = date.getHours().toString().padStart(2, "0");
