@@ -204,7 +204,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
       // Additional check for past dates (though minDate should prevent it)
       const now = new Date();
       if (datumPocetka < now) {
-        throw new Error("Ne možete rezervirati prošle datume");
+        throw new Error("Ne možete rezervirati termin u prošlosti");
       }
 
       const imaKonflikta = await provjeriKonflikte(
