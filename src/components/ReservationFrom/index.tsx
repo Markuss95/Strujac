@@ -186,6 +186,11 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
       return;
     }
 
+    if (!opis || opis.length < 4) {
+      setGreska("Opis je obavezan i mora imati najmanje 4 znaka");
+      return;
+    }
+
     setGreska(null);
     setUcitavanje(true);
 
@@ -322,6 +327,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
           value={opis}
           onChange={(e) => setOpis(e.target.value)}
           placeholder="Unesite svrhu vaše rezervacije..."
+          required
         />
       </FormGroup>
 

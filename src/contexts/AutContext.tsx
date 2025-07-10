@@ -1,8 +1,7 @@
-// src/contexts/AuthContext.tsx
+// src/contexts/AutContext.tsx
 import React, { createContext, useContext, useState, useEffect } from "react";
 import {
-  Auth,
-  User,
+  User as FirebaseUser, // Aliased for Firebase auth user
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   onAuthStateChanged,
@@ -13,7 +12,8 @@ import { db } from "../config/firebase";
 import { formatUsername } from "../utils/userUtils";
 
 interface AuthContextType {
-  currentUser: User | null;
+  currentUser: FirebaseUser | null; // Use FirebaseUser for auth user
+  userRole: "admin" | "regular" | null; // New: Store role
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   loading: boolean;
@@ -25,15 +25,33 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
+  const [userRole, setUserRole] = useState<"admin" | "regular" | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Update onAuthStateChanged to fetch role
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
-      setLoading(false);
-    });
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      async (user: FirebaseUser | null) => {
+        // Specify FirebaseUser | null
+        setCurrentUser(user);
+        if (user) {
+          const userRef = doc(db, "users", user.uid);
+          const userSnap = await getDoc(userRef);
+          if (userSnap.exists()) {
+            const data = userSnap.data() as { role?: "admin" | "regular" };
+            setUserRole(data.role || "regular");
+          } else {
+            setUserRole("regular");
+          }
+        } else {
+          setUserRole(null);
+        }
+        setLoading(false);
+      }
+    );
 
     return unsubscribe;
   }, []);
@@ -73,19 +91,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         email,
         password
       );
-      const user = userCredential.user;
+      const user: FirebaseUser = userCredential.user; // Specify FirebaseUser
 
-      // Create or update user profile in Firestore
-      const userRef = doc(db, "users", user.uid); // Change "test" to "users"
+      // Create or update user profile in Firestore with default role
+      const userRef = doc(db, "users", user.uid);
       const userSnap = await getDoc(userRef);
       if (!userSnap.exists() && user.email) {
         await setDoc(userRef, {
           email: user.email,
           username: formatUsername(user.email),
+          role: "regular", // Default to regular
         });
+        setUserRole("regular");
+      } else {
+        const data = userSnap.data() as { role?: "admin" | "regular" };
+        setUserRole(data.role || "regular");
       }
     } catch (err: any) {
-      console.error("Full login error:", err.code, err.message, err); // Add this line to log details
+      console.error("Full login error:", err.code, err.message, err);
       const croatianError = translateFirebaseError(err.code);
       setError(croatianError);
       throw new Error(croatianError);
@@ -106,6 +129,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const value = {
     currentUser,
+    userRole, // New
     signIn,
     signOut,
     loading,

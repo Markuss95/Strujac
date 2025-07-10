@@ -1,10 +1,11 @@
 // src/pages/Users/index.tsx
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import styled from "styled-components";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { User } from "../../types";
+import { useAuth } from "../../contexts/AutContext";
 
 const UsersContainer = styled.div`
   max-width: 1200px;
@@ -85,14 +86,18 @@ const NoUsersMessage = styled.div`
 `;
 
 const Users: React.FC = () => {
+  const { userRole } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const navigate = useNavigate();
-
-  // ... (rest of the file remains the same)
+  const [shouldRedirect, setShouldRedirect] = useState(false);
 
   useEffect(() => {
+    if (userRole !== "admin") {
+      setShouldRedirect(true);
+      return;
+    }
+
     const unsubscribe = onSnapshot(collection(db, "users"), (snapshot) => {
-      // Change "test" to "users"
       const userList: User[] = snapshot.docs.map(
         (doc) =>
           ({
@@ -104,7 +109,11 @@ const Users: React.FC = () => {
     });
 
     return unsubscribe;
-  }, []);
+  }, [userRole]);
+
+  if (shouldRedirect) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <UsersContainer>

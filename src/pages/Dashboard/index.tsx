@@ -86,7 +86,7 @@ const FormSection = styled.section`
 `;
 
 const Dashboard = () => {
-  const { signOut, currentUser } = useAuth();
+  const { signOut, currentUser, userRole } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [editingReservation, setEditingReservation] =
     useState<Reservation | null>(null);
@@ -128,22 +128,24 @@ const Dashboard = () => {
         <Title>Rezervacija Službenog Automobila</Title>
         <UserSection>
           <WelcomeText>Dobrodošli, {getDisplayName()}!</WelcomeText>
-          <Link to="/users">
-            <button
-              style={{
-                padding: "0.5rem 1rem",
-                backgroundColor: "#0066cc",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-                fontWeight: "500",
-                marginRight: "0.5rem",
-              }}
-            >
-              Korisnici
-            </button>
-          </Link>
+          {userRole === "admin" && (
+            <Link to="/users">
+              <button
+                style={{
+                  padding: "0.5rem 1rem",
+                  backgroundColor: "#0066cc",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  fontWeight: "500",
+                  marginRight: "0.5rem",
+                }}
+              >
+                Korisnici
+              </button>
+            </Link>
+          )}
           <LogoutButton onClick={signOut}>Odjava</LogoutButton>
         </UserSection>
       </Header>
