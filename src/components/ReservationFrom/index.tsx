@@ -17,6 +17,7 @@ import { db } from "../../config/firebase";
 import { useAuth } from "../../contexts/AutContext";
 import { Reservation, User } from "../../types";
 import CustomDatePicker from "../DatePicker";
+import TimeInput from "../TimeInput";
 import { formatUsername } from "../../utils/userUtils";
 
 const FormWrapper = styled.form`
@@ -38,13 +39,6 @@ const FormGroup = styled.div`
 const Label = styled.label`
   font-weight: bold;
   color: #333;
-`;
-
-const InputField = styled.input`
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
 `;
 
 const Textarea = styled.textarea`
@@ -304,22 +298,12 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
 
       <FormGroup>
         <Label>Vrijeme početka</Label>
-        <InputField
-          type="time"
-          value={startTime}
-          onChange={(e) => setStartTime(e.target.value)}
-          required
-        />
+        <TimeInput value={startTime} onChange={setStartTime} required />
       </FormGroup>
 
       <FormGroup>
         <Label>Vrijeme završetka</Label>
-        <InputField
-          type="time"
-          value={endTime}
-          onChange={(e) => setEndTime(e.target.value)}
-          required
-        />
+        <TimeInput value={endTime} onChange={setEndTime} required />
       </FormGroup>
 
       <FormGroup>
