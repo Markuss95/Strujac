@@ -130,6 +130,13 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUserId, setSelectedUserId] = useState(currentUser?.uid || "");
 
+  // Sync startDate with selectedDate for new reservations
+  useEffect(() => {
+    if (!existingReservation && selectedDate) {
+      setStartDate(selectedDate);
+    }
+  }, [selectedDate, existingReservation]);
+
   useEffect(() => {
     if (userRole === "admin" && !existingReservation) {
       const q = query(collection(db, "users"), where("disabled", "==", false));

@@ -143,7 +143,7 @@ const Login = () => {
     <LoginContainer>
       <LoginCard>
         <CardHeader>
-          <CardTitle>Portal za rezervaciju vozila</CardTitle>
+          <CardTitle>Rezervacija vozila</CardTitle>
           <CardTitle>OSIJEK-KOTEKS</CardTitle>
         </CardHeader>
         <CardBody onSubmit={handleSubmit}>
