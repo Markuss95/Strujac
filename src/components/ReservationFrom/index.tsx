@@ -15,9 +15,8 @@ import {
 } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { useAuth } from "../../contexts/AutContext";
-import { Reservation, ReservationFormData, User } from "../../types";
+import { Reservation, User } from "../../types";
 import CustomDatePicker from "../DatePicker";
-import TimeInput from "../TimeInput";
 import { formatUsername } from "../../utils/userUtils";
 
 const FormWrapper = styled.form`
@@ -41,7 +40,7 @@ const Label = styled.label`
   color: #333;
 `;
 
-const Input = styled.input`
+const InputField = styled.input`
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
@@ -305,12 +304,22 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
 
       <FormGroup>
         <Label>Vrijeme početka</Label>
-        <TimeInput value={startTime} onChange={setStartTime} />
+        <InputField
+          type="time"
+          value={startTime}
+          onChange={(e) => setStartTime(e.target.value)}
+          required
+        />
       </FormGroup>
 
       <FormGroup>
         <Label>Vrijeme završetka</Label>
-        <TimeInput value={endTime} onChange={setEndTime} />
+        <InputField
+          type="time"
+          value={endTime}
+          onChange={(e) => setEndTime(e.target.value)}
+          required
+        />
       </FormGroup>
 
       <FormGroup>
