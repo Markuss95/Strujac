@@ -260,7 +260,7 @@ const Calendar: React.FC<CalendarProps> = ({
 }) => {
   const [rezervacije, setRezervacije] = useState<Reservation[]>([]);
   const [trenutniMjesec, setTrenutniMjesec] = useState(new Date());
-  const { currentUser } = useAuth();
+  const { currentUser, userRole } = useAuth();
 
   useEffect(() => {
     const rezervacijeRef = collection(db, "reservations");
@@ -270,7 +270,6 @@ const Calendar: React.FC<CalendarProps> = ({
       const noveRezervacije: Reservation[] = [];
       snapshot.forEach((doc) => {
         const data = doc.data();
-        // Skip invalid documents missing required timestamp fields
         if (!data.startTime || !data.endTime || !data.createdAt) {
           console.warn(
             `Skipping invalid reservation document: ${doc.id} (missing timestamp fields)`
@@ -416,7 +415,6 @@ const Calendar: React.FC<CalendarProps> = ({
   };
 
   const prikaziVremenskeTermine = () => {
-    // Filter reservations for the selected day
     const dailyReservations = rezervacije
       .filter((rez) => {
         return rez.startTime.toDateString() === selectedDate.toDateString();
@@ -449,7 +447,8 @@ const Calendar: React.FC<CalendarProps> = ({
               </div>
             )}
           </ReservationInfo>
-          {rezervacija.userId === currentUser?.uid && (
+          {(rezervacija.userId === currentUser?.uid ||
+            userRole === "admin") && (
             <Actions>
               <ActionButton onClick={() => onEdit(rezervacija)}>
                 Uredi

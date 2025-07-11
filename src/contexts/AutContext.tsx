@@ -1,19 +1,18 @@
 // src/contexts/AutContext.tsx
 import React, { createContext, useContext, useState, useEffect } from "react";
 import {
-  User as FirebaseUser, // Aliased for Firebase auth user
+  onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
-  onAuthStateChanged,
+  User as FirebaseUser,
 } from "firebase/auth";
-import { auth } from "../config/firebase";
+import { auth, db } from "../config/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
-import { db } from "../config/firebase";
 import { formatUsername } from "../utils/userUtils";
 
 interface AuthContextType {
-  currentUser: FirebaseUser | null; // Use FirebaseUser for auth user
-  userRole: "admin" | "regular" | null; // New: Store role
+  currentUser: FirebaseUser | null;
+  userRole: "admin" | "regular" | null;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   loading: boolean;
@@ -30,12 +29,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Update onAuthStateChanged to fetch role
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(
       auth,
       async (user: FirebaseUser | null) => {
-        // Specify FirebaseUser | null
         setCurrentUser(user);
         if (user) {
           const userRef = doc(db, "users", user.uid);
@@ -98,13 +95,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         email,
         password
       );
-      const user: FirebaseUser = userCredential.user; // Specify FirebaseUser
+      const user: FirebaseUser = userCredential.user;
 
-      // Check user profile in Firestore
       const userRef = doc(db, "users", user.uid);
       const userSnap = await getDoc(userRef);
       if (!userSnap.exists()) {
-        // Create profile if it doesn't exist (for new users)
         if (user.email) {
           await setDoc(userRef, {
             email: user.email,
@@ -148,7 +143,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const value = {
     currentUser,
-    userRole, // New
+    userRole,
     signIn,
     signOut,
     loading,
