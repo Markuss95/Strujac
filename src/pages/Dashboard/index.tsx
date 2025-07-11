@@ -7,6 +7,8 @@ import ReservationForm from "../../components/ReservationFrom";
 import Modal from "../../components/Modal";
 import { Reservation } from "../../types";
 import { Link } from "react-router-dom";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "../../config/firebase";
 
 const DashboardContainer = styled.div`
   max-width: 1400px;
@@ -76,6 +78,22 @@ const LogoutButton = styled.button`
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(231, 76, 60, 0.2);
+  }
+`;
+
+const ResetPasswordButton = styled.button`
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.2);
   }
 `;
 
@@ -163,6 +181,52 @@ const Dashboard = () => {
     setEditingReservation(null);
   };
 
+  const handleResetPassword = async () => {
+    if (!currentUser?.email) {
+      alert("Korisnik nije prijavljen.");
+      return;
+    }
+
+    try {
+      // Set the language to Croatian
+      auth.languageCode = "hr";
+
+      // Configure the action URL (MUST be whitelisted in Firebase Console Authentication > Settings > Authorized domains)
+      const actionCodeSettings = {
+        url: "https://your-app-domain.com/login", // Replace with your actual app's URL
+        handleCodeInApp: true,
+      };
+
+      await sendPasswordResetEmail(auth, currentUser.email, actionCodeSettings);
+      alert("E-mail za resetiranje lozinke je poslan na vašu adresu.");
+    } catch (error: any) {
+      console.error("Greška prilikom slanja e-maila za resetiranje:", error);
+      let errorMessage =
+        "Došlo je do greške prilikom slanja e-maila za resetiranje lozinke.";
+
+      // Translate Firebase error codes to Croatian
+      switch (error.code) {
+        case "auth/invalid-email":
+          errorMessage = "Neispravna email adresa.";
+          break;
+        case "auth/user-not-found":
+          errorMessage = "Korisnik s ovom email adresom nije pronađen.";
+          break;
+        case "auth/too-many-requests":
+          errorMessage = "Previše zahtjeva. Molimo pokušajte ponovno kasnije.";
+          break;
+        case "auth/unauthorized-continue-uri":
+          errorMessage =
+            "Domena nije ovlaštena u Firebase postavkama. Dodajte domenu u Firebase Console.";
+          break;
+        default:
+          errorMessage =
+            "Došlo je do nepoznate greške. Molimo pokušajte ponovno.";
+      }
+      alert(errorMessage);
+    }
+  };
+
   return (
     <DashboardContainer>
       <Header>
@@ -172,6 +236,9 @@ const Dashboard = () => {
           {userRole === "admin" && (
             <AdminButton to="/users">Upravljanje Korisnicima</AdminButton>
           )}
+          <ResetPasswordButton onClick={handleResetPassword}>
+            Postavite lozinku
+          </ResetPasswordButton>
           <LogoutButton onClick={signOut}>Odjava</LogoutButton>
         </UserSection>
       </Header>

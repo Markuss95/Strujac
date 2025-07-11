@@ -318,7 +318,6 @@ const Calendar: React.FC<CalendarProps> = ({
     const daysInMonth = lastDay.getDate();
     const startingDay = firstDay.getDay();
 
-    const previousMonth = new Date(year, month - 1, 1);
     const daysInPreviousMonth = new Date(year, month, 0).getDate();
     const previousMonthDays = Array.from({ length: startingDay }, (_, i) => ({
       date: new Date(
