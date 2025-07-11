@@ -268,7 +268,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
       setSuccess(true);
       onSuccess();
     } catch (err) {
-      setError("Došlo je do greške prilikom spremanja rezervacije.");
+      setError("Došlo je do greške prilikom spremanja rezervacije");
       console.error(err);
     } finally {
       setLoading(false);
