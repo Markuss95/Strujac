@@ -1,4 +1,6 @@
+// Updated ReservationForm component with mandatory description
 // src/components/ReservationFrom/index.tsx
+
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import {
@@ -41,12 +43,30 @@ const Label = styled.label`
   color: #333;
 `;
 
+const RequiredLabel = styled(Label)`
+  &::after {
+    content: " *";
+    color: #e74c3c;
+  }
+`;
+
 const Textarea = styled.textarea`
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 1rem;
   min-height: 100px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: #0066cc;
+    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+  }
+
+  &::placeholder {
+    color: #6c757d;
+  }
 `;
 
 const Select = styled.select`
@@ -200,6 +220,12 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
     setError(null);
     setSuccess(false);
 
+    // Validate required fields
+    if (!description.trim()) {
+      setError("Opis je obavezan.");
+      return;
+    }
+
     const start = parseDateTime(startDate, startTime);
     const end = parseDateTime(startDate, endTime);
 
@@ -246,7 +272,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
         await updateDoc(doc(db, "reservations", existingReservation.id), {
           startTime: Timestamp.fromDate(start),
           endTime: Timestamp.fromDate(end),
-          description,
+          description: description.trim(), // Trim whitespace
         });
       } else {
         await addDoc(collection(db, "reservations"), {
@@ -254,7 +280,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
           username: finalUsername,
           startTime: Timestamp.fromDate(start),
           endTime: Timestamp.fromDate(end),
-          description,
+          description: description.trim(), // Trim whitespace
           createdAt: Timestamp.now(),
         });
       }
@@ -307,11 +333,12 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
       </FormGroup>
 
       <FormGroup>
-        <Label>Opis (opcionalno)</Label>
+        <RequiredLabel>Opis</RequiredLabel>
         <Textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Unesite opis rezervacije..."
+          placeholder="Unesite opis rezervacije... (obavezno)"
+          required
         />
       </FormGroup>
 
