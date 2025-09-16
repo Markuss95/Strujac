@@ -236,9 +236,7 @@ const Dashboard = () => {
           {userRole === "admin" && (
             <AdminButton to="/users">Upravljanje Korisnicima</AdminButton>
           )}
-          <ResetPasswordButton onClick={handleResetPassword}>
-            Postavite lozinku
-          </ResetPasswordButton>
+
           <LogoutButton onClick={signOut}>Odjava</LogoutButton>
         </UserSection>
       </Header>
