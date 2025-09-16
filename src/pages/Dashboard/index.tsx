@@ -191,20 +191,14 @@ const Dashboard = () => {
       // Set the language to Croatian
       auth.languageCode = "hr";
 
-      // Configure the action URL (MUST be whitelisted in Firebase Console Authentication > Settings > Authorized domains)
-      const actionCodeSettings = {
-        url: "https://your-app-domain.com/login", // Replace with your actual app's URL
-        handleCodeInApp: true,
-      };
-
-      await sendPasswordResetEmail(auth, currentUser.email, actionCodeSettings);
+      // Send password reset email without custom action settings
+      await sendPasswordResetEmail(auth, currentUser.email);
       alert("E-mail za resetiranje lozinke je poslan na vašu adresu.");
     } catch (error: any) {
       console.error("Greška prilikom slanja e-maila za resetiranje:", error);
       let errorMessage =
         "Došlo je do greške prilikom slanja e-maila za resetiranje lozinke.";
 
-      // Translate Firebase error codes to Croatian
       switch (error.code) {
         case "auth/invalid-email":
           errorMessage = "Neispravna email adresa.";
@@ -214,10 +208,6 @@ const Dashboard = () => {
           break;
         case "auth/too-many-requests":
           errorMessage = "Previše zahtjeva. Molimo pokušajte ponovno kasnije.";
-          break;
-        case "auth/unauthorized-continue-uri":
-          errorMessage =
-            "Domena nije ovlaštena u Firebase postavkama. Dodajte domenu u Firebase Console.";
           break;
         default:
           errorMessage =
@@ -236,7 +226,9 @@ const Dashboard = () => {
           {userRole === "admin" && (
             <AdminButton to="/users">Upravljanje Korisnicima</AdminButton>
           )}
-
+          <ResetPasswordButton onClick={handleResetPassword}>
+            Postavite lozinku
+          </ResetPasswordButton>
           <LogoutButton onClick={signOut}>Odjava</LogoutButton>
         </UserSection>
       </Header>
