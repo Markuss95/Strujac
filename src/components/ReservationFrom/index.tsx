@@ -337,7 +337,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
         <Textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Unesite opis rezervacije... (obavezno)"
+          placeholder="Unesite opis rezervacije"
           required
         />
       </FormGroup>
