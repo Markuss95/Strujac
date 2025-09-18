@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import {
   doc,
-  getDoc,
   setDoc,
   onSnapshot,
   Timestamp,
@@ -239,7 +238,6 @@ const BatteryBar: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [updatedBy, setUpdatedBy] = useState<string>("");
   const [updatedByUsername, setUpdatedByUsername] = useState<string>("");
 
   useEffect(() => {
@@ -258,8 +256,6 @@ const BatteryBar: React.FC = () => {
               : data.lastUpdated;
           setLastUpdated(dateValue);
         }
-
-        setUpdatedBy(data.updatedBy || "");
 
         // Get username from users collection based on email
         if (data.updatedBy && data.updatedBy !== "System") {
@@ -369,7 +365,7 @@ const BatteryBar: React.FC = () => {
       })}`;
 
     const displayName = username || "Nepoznato";
-    return `Nivo baterije ažurirao ${displayName} ${timeAgo}`;
+    return `Ažurirao ${displayName} ${timeAgo}`;
   };
 
   return (
