@@ -1,9 +1,10 @@
-// src/pages/Dashboard/index.tsx
+// Updated src/pages/Dashboard/index.tsx with Battery Bar
 import React, { useState } from "react";
 import styled from "styled-components";
 import { useAuth } from "../../contexts/AutContext";
 import Calendar from "../../components/Calendar";
 import ReservationForm from "../../components/ReservationFrom";
+import BatteryBar from "../../components/BatteryBar";
 import Modal from "../../components/Modal";
 import { Reservation } from "../../types";
 import { Link } from "react-router-dom";
@@ -232,6 +233,10 @@ const Dashboard = () => {
           <LogoutButton onClick={signOut}>Odjava</LogoutButton>
         </UserSection>
       </Header>
+
+      {/* Battery Bar Section */}
+      <BatteryBar />
+
       <MainContent>
         <CalendarSection>
           <SectionHeader>
