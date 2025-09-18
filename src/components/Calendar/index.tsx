@@ -473,11 +473,11 @@ const Calendar: React.FC<CalendarProps> = ({
     <Legend>
       <LegendItem>
         <LegendColor color="#ff4d4d" />
-        <span>Rezervirano</span>
+        <span>Postoji rezervacija u tom danu</span>
       </LegendItem>
       <LegendItem>
         <LegendColor color="#f0f0f0" />
-        <span>Slobodno</span>
+        <span>Bez rezervacija</span>
       </LegendItem>
     </Legend>
   );
